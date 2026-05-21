@@ -7,6 +7,7 @@ HIDDEN_DIM = 32
 LEARNING_RATE = 0.01
 EPOCHS = 80
 PRINT_EVERY = 10
+TRACE_SENTENCE = "i love this movie but the ending was terrible"
 PROJECT_ROOT = __import__("pathlib").Path(__file__).resolve().parent.parent
 LOCAL_GLOVE_DIR = PROJECT_ROOT / "data_store" / "glove"
 LOCAL_GLOVE_FILE = LOCAL_GLOVE_DIR / "glove.6B.50d.txt"

@@ -1,6 +1,4 @@
-from pathlib import Path
-
-from .config import DEVICE, EMBED_DIM, HIDDEN_DIM
+from .config import DEVICE, EMBED_DIM, HIDDEN_DIM, TRACE_SENTENCE
 from .data import build_training_data, download_glove, load_glove_embeddings
 from .io_utils import append_summary, create_run_paths, log_block
 from .model import SentimentLSTM
@@ -11,7 +9,7 @@ from .plotting import (
     plot_training_dynamics,
 )
 from .testing import analyze_token_influence, inspect_sentence
-from .training import print_single_step_walkthrough, train_model
+from .training import print_single_step_walkthrough, print_token_trace_report, train_model
 
 
 def _slugify(sentence: str) -> str:
@@ -40,6 +38,7 @@ def main():
     print("Phase 2/5: preparing training data")
     train_data = build_training_data(glove)
     append_summary(summary_file, f"Training samples: {len(train_data)}")
+    append_summary(summary_file, f"Tracked sentence: {TRACE_SENTENCE}")
 
     print("Phase 3/5: saving one training-step walkthrough")
     demo_model = SentimentLSTM(input_dim=EMBED_DIM, hidden_dim=HIDDEN_DIM).to(DEVICE)
@@ -47,14 +46,25 @@ def main():
 
     print("Phase 4/5: training model and saving training graphs")
     model = SentimentLSTM(input_dim=EMBED_DIM, hidden_dim=HIDDEN_DIM).to(DEVICE)
-    history = log_block(log_file, train_model, model, train_data)
+    history = log_block(log_file, train_model, model, train_data, TRACE_SENTENCE)
+    log_block(log_file, print_token_trace_report, history)
     plot_training_dynamics(history, plots_dir)
     append_summary(summary_file, "Saved training plots:")
     append_summary(summary_file, "- training_loss_accuracy.png")
     append_summary(summary_file, "- training_gradients_per_gate.png")
     append_summary(summary_file, "- training_weight_magnitude.png")
     append_summary(summary_file, "- training_weight_updates.png")
+    append_summary(summary_file, "- training_bias_gradients.png")
+    append_summary(summary_file, "- training_bias_magnitude.png")
+    append_summary(summary_file, "- training_bias_updates.png")
     append_summary(summary_file, "- training_gate_activations.png")
+    append_summary(summary_file, "- trace_prediction_over_epochs.png")
+    append_summary(summary_file, "- trace_forget_heatmap.png")
+    append_summary(summary_file, "- trace_input_heatmap.png")
+    append_summary(summary_file, "- trace_candidate_heatmap.png")
+    append_summary(summary_file, "- trace_output_heatmap.png")
+    append_summary(summary_file, "- trace_cell_heatmap.png")
+    append_summary(summary_file, "- trace_hidden_heatmap.png")
 
     test_sentences = [
         "i love this movie",

@@ -71,6 +71,48 @@ def plot_training_dynamics(history, plots_dir: Path):
     _save_plot(plots_dir / "training_weight_updates.png")
 
     plt.figure()
+    for key, label in (
+        ("bf", "Forget gate bias"),
+        ("bi", "Input gate bias"),
+        ("bg", "Candidate gate bias"),
+        ("bo", "Output gate bias"),
+    ):
+        plt.plot(epochs, history["bias_grad_stats"][key], label=label)
+    plt.title("Bias gradient magnitude per gate")
+    plt.xlabel("Epoch")
+    plt.ylabel("Average gradient magnitude")
+    plt.legend()
+    _save_plot(plots_dir / "training_bias_gradients.png")
+
+    plt.figure()
+    for key, label in (
+        ("bf", "Forget gate bias"),
+        ("bi", "Input gate bias"),
+        ("bg", "Candidate gate bias"),
+        ("bo", "Output gate bias"),
+    ):
+        plt.plot(epochs, history["bias_stats"][key], label=label)
+    plt.title("Bias magnitude growth per gate")
+    plt.xlabel("Epoch")
+    plt.ylabel("Average |bias|")
+    plt.legend()
+    _save_plot(plots_dir / "training_bias_magnitude.png")
+
+    plt.figure()
+    for key, label in (
+        ("bf", "Forget gate bias"),
+        ("bi", "Input gate bias"),
+        ("bg", "Candidate gate bias"),
+        ("bo", "Output gate bias"),
+    ):
+        plt.plot(epochs, history["bias_update_stats"][key], label=label)
+    plt.title("Average bias change per epoch")
+    plt.xlabel("Epoch")
+    plt.ylabel("Average |delta bias|")
+    plt.legend()
+    _save_plot(plots_dir / "training_bias_updates.png")
+
+    plt.figure()
     plt.plot(epochs, history["gate_activation_stats"]["forget"], label="Forget gate")
     plt.plot(epochs, history["gate_activation_stats"]["input"], label="Input gate")
     plt.plot(epochs, history["gate_activation_stats"]["output"], label="Output gate")
@@ -79,6 +121,80 @@ def plot_training_dynamics(history, plots_dir: Path):
     plt.ylabel("Average activation")
     plt.legend()
     _save_plot(plots_dir / "training_gate_activations.png")
+
+    plot_token_trace_dynamics(history, plots_dir)
+
+
+def _plot_trace_heatmap(values, tokens, epochs, title: str, output_path: Path):
+    matrix = np.array(values)
+
+    plt.figure(figsize=(max(6, len(tokens) * 0.9), 5))
+    plt.imshow(matrix, aspect="auto")
+    plt.yticks(range(len(epochs)), epochs)
+    plt.xticks(range(len(tokens)), tokens, rotation=45)
+    plt.xlabel("Token")
+    plt.ylabel("Epoch")
+    plt.title(title)
+    plt.colorbar()
+    _save_plot(output_path)
+
+
+def plot_token_trace_dynamics(history, plots_dir: Path):
+    trace = history["token_trace"]
+    tokens = trace["tokens"]
+    epochs = trace["epochs"]
+
+    plt.figure()
+    plt.plot(epochs, trace["probability"], label="Prediction probability")
+    plt.plot(epochs, trace["loss"], label="Trace loss")
+    plt.title("Tracked sentence prediction across epochs")
+    plt.xlabel("Epoch")
+    plt.ylabel("Value")
+    plt.legend()
+    _save_plot(plots_dir / "trace_prediction_over_epochs.png")
+
+    _plot_trace_heatmap(
+        trace["forget"],
+        tokens,
+        epochs,
+        "Forget gate trace across epochs",
+        plots_dir / "trace_forget_heatmap.png",
+    )
+    _plot_trace_heatmap(
+        trace["input"],
+        tokens,
+        epochs,
+        "Input gate trace across epochs",
+        plots_dir / "trace_input_heatmap.png",
+    )
+    _plot_trace_heatmap(
+        trace["candidate"],
+        tokens,
+        epochs,
+        "Candidate state trace across epochs",
+        plots_dir / "trace_candidate_heatmap.png",
+    )
+    _plot_trace_heatmap(
+        trace["output"],
+        tokens,
+        epochs,
+        "Output gate trace across epochs",
+        plots_dir / "trace_output_heatmap.png",
+    )
+    _plot_trace_heatmap(
+        trace["cell"],
+        tokens,
+        epochs,
+        "Cell state trace across epochs",
+        plots_dir / "trace_cell_heatmap.png",
+    )
+    _plot_trace_heatmap(
+        trace["hidden"],
+        tokens,
+        epochs,
+        "Hidden state trace across epochs",
+        plots_dir / "trace_hidden_heatmap.png",
+    )
 
 
 def plot_gate_heatmap(
